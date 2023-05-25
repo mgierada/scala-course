@@ -55,18 +55,55 @@ object Effects {
    MyIO is the most general effect type in Scala that we can imagine - desire in pure functional programming.
    */
 
-  case class MyIO[A](unsafeRun:()=> A) {
+  case class MyIO[A](unsafeRun: () => A) {
     def map[B](f: A => B): MyIO[B] = MyIO(() => f(unsafeRun()))
-    def flatMap[B](f: A => MyIO[B]): MyIO[B] = MyIO(() => f(unsafeRun()).unsafeRun())
+    def flatMap[B](f: A => MyIO[B]): MyIO[B] =
+      MyIO(() => f(unsafeRun()).unsafeRun())
   }
 
-  val anIOWithSIdeEffects : MyIO[Int] = MyIO(() => {
+  val anIOWithSIdeEffects: MyIO[Int] = MyIO(() => {
     println("I am printing something")
     42
   })
 
+  /** Exercises - create some IO which
+    *   1. measure the current time of the sytem 2. measure the duration of a
+    *      computation
+    *      - use exercise the previous section
+    *      - use map, flatMap combinations of MyIO 3. read something from the
+    *        console 4. print something to the console (e.g. your name), then
+    *        read, then print again
+    */
+
+// 1. measure the current time of the sytem
+  val currentTime: MyIO[Long] = MyIO(() => System.currentTimeMillis())
+  
+// 2. measure the duration of a computation
+  def measure[A](computation: MyIO[A]): MyIO[(A, Long)] = for {
+    start <- currentTime
+    result <- computation
+    end <- currentTime
+  } yield (result, end - start)
+
+
+  // 3. read something from the console
+  val readSomething: MyIO[String] = MyIO(() => {
+    scala.io.StdIn.readLine()
+  })
+
+  // 4. print something to the console (e.g. your name), then read, then print again
+  val printReadPrint: MyIO[Unit] = for {
+    _ <- MyIO(() => println("Enter your name: "))
+    name<- readSomething 
+    _ <- MyIO(() => println(s"Thank you $name!"))
+  } yield ()
+
   def main(args: Array[String]): Unit = {
     println("Effects")
     anIOWithSIdeEffects.unsafeRun()
+    println(measure(MyIO(() => 42)).unsafeRun())
+    printReadPrint.unsafeRun()
   }
+
+  
 }
