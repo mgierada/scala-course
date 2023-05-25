@@ -1,6 +1,11 @@
 package part1recap
 
 import scala.util.Try
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
+import scala.util.Success
+import scala.util.Failure
+import java.util.concurrent.Executors
 
 object Essentials {
 
@@ -48,7 +53,7 @@ object Essentials {
   val incremeter = (x: Int) => x + 1 // anonymous function (lambda) new patern
 
   // higher order functions (map and flatMap or filter)
-  val processedList = List(1, 2, 3).map(incrementer) // List(2, 3, 4)
+  val processedList = List(1, 2, 3).map(incremeter) // List(2, 3, 4)
 
   val aLongerList =
     List(1, 2, 3).flatMap(x => List(x, x + 1)) // List(1, 2, 2, 3, 3, 4)
@@ -62,11 +67,11 @@ object Essentials {
 
   val onAttempt =
     Try(
-      /* some code that might throw an exception */ j
+      2
     ) // Try is a subtype of Success and Failure
   // Try works similar as List and Options
 
-  val aModifiedAttempt: Try[Int] = onAttempt.map(_ * 2) // Success or Failure
+  val aModifiedAttempt: Try[Int] = onAttempt.map(_ * 5) // Success or Failure
 
   // patern matching - switch case on steroids
   val anUnknown: Any = 2
