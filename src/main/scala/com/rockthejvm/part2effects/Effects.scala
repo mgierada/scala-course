@@ -77,14 +77,13 @@ object Effects {
 
 // 1. measure the current time of the sytem
   val currentTime: MyIO[Long] = MyIO(() => System.currentTimeMillis())
-  
+
 // 2. measure the duration of a computation
   def measure[A](computation: MyIO[A]): MyIO[(A, Long)] = for {
     start <- currentTime
     result <- computation
     end <- currentTime
   } yield (result, end - start)
-
 
   // 3. read something from the console
   val readSomething: MyIO[String] = MyIO(() => {
@@ -94,9 +93,34 @@ object Effects {
   // 4. print something to the console (e.g. your name), then read, then print again
   val printReadPrint: MyIO[Unit] = for {
     _ <- MyIO(() => println("Enter your name: "))
-    name<- readSomething 
+    name <- readSomething
     _ <- MyIO(() => println(s"Thank you $name!"))
   } yield ()
+
+  /** A simplified version of ZIO Effects - what if some exceptions are thrown?
+    *
+    * R is an environment, E is an error, A is a value return if all is fine
+    *
+    * R consumer of MyZIO so it's contravariant
+    * A is producer of MyZIO so it's covariant
+    * E is an error produced, so it's covariant
+    */
+
+  case class MyZIO[-R, +E, +A](unsafeRun: R => Either[E, A]) {
+    def map[B](f: A => B): MyZIO[R, E, B] = MyZIO(r =>
+      unsafeRun(r) match {
+        case Left(e)  => Left(e)
+        case Right(v) => Right(f(v))
+      }
+    )
+    def flatMap[R1<: R, E1 >: E, B](f: A => MyZIO[R1, E1, B]): MyZIO[R1, E1, B] =
+      MyZIO(r =>
+        unsafeRun(r) match {
+          case Left(e)  => Left(e)
+          case Right(v) => f(v).unsafeRun(r)
+        }
+      )
+  }
 
   def main(args: Array[String]): Unit = {
     println("Effects")
@@ -104,6 +128,4 @@ object Effects {
     println(measure(MyIO(() => 42)).unsafeRun())
     printReadPrint.unsafeRun()
   }
-
-  
 }

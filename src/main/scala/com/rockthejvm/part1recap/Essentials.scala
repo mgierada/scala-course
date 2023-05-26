@@ -71,7 +71,7 @@ object Essentials {
     ) // Try is a subtype of Success and Failure
   // Try works similar as List and Options
 
-  val aModifiedAttempt: Try[Int] = onAttempt.map(_ * 5) // Success or Failure
+  val aModifiedAttempt: Try[Int] = onAttempt.map(_ * 6) // Success or Failure
 
   // patern matching - switch case on steroids
   val anUnknown: Any = 2
