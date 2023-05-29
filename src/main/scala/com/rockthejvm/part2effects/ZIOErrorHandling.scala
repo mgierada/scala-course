@@ -18,9 +18,9 @@ object ZIOErrorHandling extends ZIOAppDefault {
     println("Trying something")
     val string: String = null
     string.length
-  } // this is bad
+  } // this is bad because it can lead to missmatches for end user (expect success but it fact it can fail)
 
-  // use attempt if you're ever unsure whether your code might throw
+  // use attempt if you're ever unsure whether your code might throw an exception
   val anAttempt: ZIO[Any, Throwable, Int] = ZIO.attempt {
     println("Trying something")
     val string: String = null
@@ -29,15 +29,19 @@ object ZIOErrorHandling extends ZIOAppDefault {
 
   // effectfully catch errors
   val catchError = anAttempt.catchAll(e => ZIO.succeed(s"Returning a different value because $e"))
+  // this way we can catch selected errors and return a different value or thrown something else
   val catchSelectiveErrors = anAttempt.catchSome {
     case e: RuntimeException => ZIO.succeed(s"Ignoring runtime exceptions: $e")
     case _ => ZIO.succeed("Ignoring everything else")
+    // get fail as well
+    // case _ => ZIO.fail("Ignoring everything else")
   }
+
   // chain effects
   val aBetterAttempt = anAttempt.orElse(ZIO.succeed(56))
   // fold: handle both success and failure
   val handleBoth: ZIO[Any, Nothing, String] = anAttempt.fold(ex => s"Something bad happened: $ex", value => s"Length of the string was $value")
-  // effectful fold: foldZIO
+  // effectful fold: foldZIO cool way to control error channels
   val handleBoth_v2 = anAttempt.foldZIO(
     ex => ZIO.succeed(s"Something bad happened: $ex"),
     value => ZIO.succeed(s"Length of the string was $value")
@@ -47,10 +51,12 @@ object ZIOErrorHandling extends ZIOAppDefault {
     Conversions between Option/Try/Either to ZIO
    */
 
-  val aTryToZIO: ZIO[Any, Throwable, Int] = ZIO.fromTry(Try(42 / 0))  // can fail with Throwable
+  val aTryToZIO: ZIO[Any, Throwable, Int] = ZIO.fromTry(Try(42 / 0))  // can fail with Throwable - natural channel of error
 
   // either -> ZIO
+  // IO is the same as ZIO with any environment
   val anEither: Either[Int, String] = Right("Success!")
+  // Either ZIO always return a success
   val anEitherToZIO: ZIO[Any, Int, String] = ZIO.fromEither(anEither)
   // ZIO -> ZIO with Either as the value channel
   val eitherZIO = anAttempt.either
@@ -90,9 +96,13 @@ object ZIOErrorHandling extends ZIOAppDefault {
     case Right(v) => ZIO.succeed(v)
   }
 
+  // Second video
+  
+  // ERRORS VS DEFECTS
+
   /*
     Errors = failures present in the ZIO type signature ("checked" errors)
-    Defects = failures that are unrecoverable, unforeseen, NOT present in the ZIO type signature
+    Defects = failures that are unrecoverable, unforeseen, NOT present in the ZIO type signature -> not represented in ZIO in general like division by 0
 
     ZIO[R,E,A] can finish with Exit[E,A]
       - Success[A] containing a value
