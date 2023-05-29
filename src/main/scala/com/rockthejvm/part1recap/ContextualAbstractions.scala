@@ -7,14 +7,13 @@ object ContextualAbstractions {
   // typiical way of doing that
   def increment(x: Int)(amount: Int) = x + amount
 
-  // using a function as a parameter that when specified works as default valueA
-  //
+  // using a function as a parameter that when specified works as default value 
   def increment_with_using(x: Int)(using amount: Int) = x + amount
   given defaultAmount: Int = 10
   val incremented = increment(2) // 12
 
-  // more comples usageA
-  //
+  // more complex usage
+  
   trait Combiner[A] {
     def combine(x: A, y: A): A
     def empty: A

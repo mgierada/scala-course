@@ -29,24 +29,73 @@ object ZIOEffects {
 
   /** Type aliases for ZIO
     */
-   
+
   // UIO - ZIO[Any, Nothing, A] - no error, no environment, no requirements,cannot failed, produces A
   val aUIO: UIO[Int] = ZIO.succeed(42)
-  
+
   // URIO[R, A] = ZIO[R, Nothing, A] - no error, requires an environment of type R, produces A
   val aURIO: URIO[String, Int] = ZIO.succeed(42)
-  
+
   // TASK [A] = ZIO[Any, Throwable, A] - no environment, can fail with Throwable, produces A
   val aSuccessfulTask: Task[Int] = ZIO.succeed(82)
   val aFailedTask: Task[Int] = ZIO.fail(new RuntimeException("SWW"))
 
   // IO[E, A] = ZIO[Any, E, A] - no environment, can fail with E, produces A
-  val aSuccessfulIO = IO[String, Int](42)
-  val aFailedIO = IO[String, Int](new RuntimeException("SWW"))
+  // val aSuccessfulIO = IO[String, Int](42)
+  // val aFailedIO = IO[String, Int](new RuntimeException("SWW"))
 
   // RIO[R, A] = ZIO[R, Throwable, A] - requires an environment of type R, can fail with Throwable, produces AS
   val anRIO: RIO[Int, String] = ZIO.succeed("4")
   val aFailedRIO: RIO[Int, String] = ZIO.fail(new RuntimeException("SWW"))
 
-  def main(args: Array[String]): Unit = {}
+  /** ZIO Exercises
+    */
+
+  // 1. Sequence two ZIOs and take the value of the second one
+  def seqnecneTakeLast[R, E, A, B](
+      zioa: ZIO[R, E, A],
+      ziob: ZIO[R, E, B]
+  ): ZIO[R, E, B] = zioa.flatMap(a => ziob.map(b => b))
+
+  // 2. Sequence two ZIOs and take the value of the first one
+  def sequenceTeakeFirst[R, E, A, B](
+      first: ZIO[R, E, A],
+      second: ZIO[R, E, B]
+  ): ZIO[R, E, A] = ???
+
+  // 3. Run a ZIO forever
+  def runForever[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] = ???
+  val endlessLoop = runForever {
+    ZIO.succeed {
+      Thread.sleep(100)
+    }
+  }
+
+  // 4. Convert the value of a ZIO to something else
+  def conver[R, E, A, B](zio: ZIO[R, A, B], value: B): ZIO[R, E, B] = ???
+
+  // 5. Discard the value of a ZIO
+  def asUnit[R, A, E](zio: ZIO[R, E, A]): ZIO[R, E, Unit] = ???
+
+  def main(args: Array[String]): Unit = {
+    val runtime = Runtime.default
+    implicit val trace = Trace.empty
+    Unsafe.unsafe { implicit u =>
+      val firstEffect = ZIO.succeed{
+        println("Computing first effect")
+        Thread.sleep(1000)
+        1
+      }
+      
+      val secondEffect= ZIO.succeed{
+        println("Computing second effect")
+        Thread.sleep(1000)
+        2
+      }
+
+      println(runtime.unsafe.run(squenceTakeLast(firstEffect, secondEffect)))
+
+    }
+  }
+
 }
