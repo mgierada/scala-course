@@ -12,18 +12,22 @@ object ZIOApps {
     Unsafe.unsafeCompat { unsafe =>
       given u: Unsafe = unsafe
 
-      println(runtime.unsafe.run(meaningOfLife))
+      BetterApp.main(Array.empty)
+
+      // println(runtime.unsafe.run(meaningOfLife))
     }
   }
 }
 
 object BetterApp extends ZIOAppDefault {
   // provides runtime, trace, ...
+  // It provides a single method that we can override: run
+  // It is a runnable application that evaluates to a single effect
 
-  override def run = ZIOApps.meaningOfLife.debug
+  override def run = ZIOApps.meaningOfLife.flatMap(mol => ZIO.succeed(println(mol)))
 }
 
-// not needed
+// not needed for 99.999% of the cases
 object ManualApp extends ZIOApp {
   override implicit def environmentTag = ???
 
