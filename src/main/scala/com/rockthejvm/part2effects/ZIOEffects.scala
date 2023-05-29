@@ -61,41 +61,44 @@ object ZIOEffects {
   def sequenceTeakeFirst[R, E, A, B](
       first: ZIO[R, E, A],
       second: ZIO[R, E, B]
-  ): ZIO[R, E, A] = ???
+  ): ZIO[R, E, A] = first.flatMap(a => second.map(_ => a))
 
   // 3. Run a ZIO forever
-  def runForever[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] = ???
-  val endlessLoop = runForever {
-    ZIO.succeed {
-      Thread.sleep(100)
-    }
-  }
+  // def runForever[R, E, A](zio: ZIO[R, E, A]): ZIO[R, E, A] = ???
+  // val endlessLoop = runForever {
+  //   ZIO.succeed {
+  //     Thread.sleep(100)
+  //   }
+  // }
 
   // 4. Convert the value of a ZIO to something else
-  def conver[R, E, A, B](zio: ZIO[R, A, B], value: B): ZIO[R, E, B] = ???
+  // def conver[R, E, A, B](zio: ZIO[R, A, B], value: B): ZIO[R, E, B] = ???
 
   // 5. Discard the value of a ZIO
-  def asUnit[R, A, E](zio: ZIO[R, E, A]): ZIO[R, E, Unit] = ???
+  // def asUnit[R, A, E](zio: ZIO[R, E, A]): ZIO[R, E, Unit] = ???
 
   def main(args: Array[String]): Unit = {
     val runtime = Runtime.default
-    implicit val trace = Trace.empty
-    Unsafe.unsafe { implicit u =>
-      val firstEffect = ZIO.succeed{
-        println("Computing first effect")
-        Thread.sleep(1000)
-        1
-      }
-      
-      val secondEffect= ZIO.succeed{
-        println("Computing second effect")
-        Thread.sleep(1000)
-        2
-      }
 
-      println(runtime.unsafe.run(squenceTakeLast(firstEffect, secondEffect)))
-
+    val firstEffect = ZIO.succeed {
+      println("Computing first effect")
+      Thread.sleep(1000)
+      1
     }
+
+    val secondEffect = ZIO.succeed {
+      println("Computing second effect")
+      Thread.sleep(1000)
+      2
+    }
+
+    val program =
+      for result <- seqnecneTakeLast(firstEffect, secondEffect)
+      yield result
+
+    val programResult =  program.runtime.unsafe()
+    println(programResult)
+
   }
 
 }
