@@ -27,12 +27,6 @@ object Effects {
    - if side effect are required, construction must be separate from EXECUTION
    */
 
-  /*
-    Example: Options=  possible absetn valuees:
-    - type signature describes the kind of computations = a possibly absent value
-    - type signature says that the computations returns an A, if the computations produce something
-    - no side effects are needed.
-   */
 
   val anOption: Option[Int] = Some(42)
   /*
@@ -52,7 +46,7 @@ object Effects {
    - produces a value of type A if the computation is successful
    - side effects are required, construction IS SEPARATE form execution
 
-   MyIO is the most general effect type in Scala that we can imagine - desire in pure functional programming.
+    MyIO IS AN EFFECT!
    */
 
   case class MyIO[A](unsafeRun: () => A) {
@@ -92,9 +86,9 @@ object Effects {
 
   // 4. print something to the console (e.g. your name), then read, then print again
   val printReadPrint: MyIO[Unit] = for {
-    _ <- MyIO(() => println("Enter your name: "))
-    name <- readSomething
-    _ <- MyIO(() => println(s"Thank you $name!"))
+    _ <- MyIO(() => println("What's your name?"))
+    _ <- readSomething
+    _ <- MyIO(() => println("Thanks!"))
   } yield ()
 
   /** A simplified version of ZIO Effects - what if some exceptions are thrown?
