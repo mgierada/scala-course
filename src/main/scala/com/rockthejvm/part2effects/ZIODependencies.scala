@@ -139,7 +139,7 @@ object ZIODependencies extends ZIOAppDefault {
   val subscriptionLaunch
       : ZIO[EmailService with UserDatabase, Nothing, Nothing] =
     UserSubscription.live.launch
-  // memoization
+  // memoization by default. use eg. UserEmail.live.fresh to disable
 
   /*
     Already provided services: Clock, Random, System, Console
