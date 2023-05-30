@@ -12,14 +12,15 @@ object ZIODependencies extends ZIOAppDefault {
   /*
    * This is not the framework preffered approach - it's very general.
    */
-  val subscriptionService = ZIO.succeed( // Dependency injection in ZIO (very general approach)
-    UserSubscription.create( // we can use factory here
-      EmailService.create(),
-      UserDatabase.create(
-        ConnectionPool.create(10)
+  val subscriptionService =
+    ZIO.succeed( // Dependency injection in ZIO (very general approach)
+      UserSubscription.create( // we can use factory here
+        EmailService.create(),
+        UserDatabase.create(
+          ConnectionPool.create(10)
+        )
       )
     )
-  )
 
   /*
     drawbacks
@@ -44,6 +45,11 @@ object ZIODependencies extends ZIOAppDefault {
 
   // alternative
   def subscribe_v2(user: User): ZIO[UserSubscription, Throwable, Unit] = for {
+    // ZIO.service returns a URIO
+    //
+    // difference comparing to subscribe - user if fetched from different place
+    // end effect will have a different effect - here we return a ZIO
+    // only able to call that when somone push user to it -> see program_v2
     sub <- ZIO.service[
       UserSubscription
     ] // ZIO[UserSubscription, Nothing, UserSubscription]
@@ -63,15 +69,23 @@ object ZIODependencies extends ZIOAppDefault {
    */
 
   /** ZLayers
+    *
+    * A cool construct to pass dependencies in nested dependencies graph
+    * Usually, Zlayer requires some environment so Any could be more specific
+    * but anyway, usually is not empty
     */
   val connectionPoolLayer: ZLayer[Any, Nothing, ConnectionPool] =
     ZLayer.succeed(ConnectionPool.create(10))
   // a layer that requires a dependency (higher layer) can be built with ZLayer.fromFunction
   // (and automatically fetch the function arguments and place them into the ZLayer's dependency/environment type argument)
   val databaseLayer: ZLayer[ConnectionPool, Nothing, UserDatabase] =
+    // it auto fetches argument from the function and pushes it
     ZLayer.fromFunction(UserDatabase.create _)
   val emailServiceLayer: ZLayer[Any, Nothing, EmailService] =
+    // we can pass the factory methods like that
     ZLayer.succeed(EmailService.create())
+
+  // we can compose Zlayers (in contrast to ZIO api itself) so the final ZLayer will have all the dependencies and does not require any arguments
   val userSubscriptionServiceLayer
       : ZLayer[UserDatabase with EmailService, Nothing, UserSubscription] =
     ZLayer.fromFunction(UserSubscription.create _)
@@ -89,9 +103,10 @@ object ZIODependencies extends ZIOAppDefault {
     subscriptionRequirementsLayer >>> userSubscriptionServiceLayer
 
   // best practice: write "factory" methods exposing layers in the companion objects of the services
+  // see ServiceModel.scala
   val runnableProgram = program_v2.provideLayer(userSubscriptionLayer)
 
-  // magic
+  // magic - dependency graph is constructed automatically
   val runnableProgram_v2 = program_v2.provide(
     UserSubscription.live,
     EmailService.live,
@@ -102,6 +117,7 @@ object ZIODependencies extends ZIOAppDefault {
     // and tell you the dependency graph!
     // ZLayer.Debug.tree,
     ZLayer.Debug.mermaid
+    // can use either mermaind or tree at the same time
   )
 
   // magic v2

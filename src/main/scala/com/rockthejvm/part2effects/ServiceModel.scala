@@ -7,7 +7,10 @@ object ServiceModel {
   // app to subscribe users to newsletter
   case class User(name: String, email: String)
 
-  class UserSubscription(emailService: EmailService, userDatabase: UserDatabase) {
+  class UserSubscription(
+      emailService: EmailService,
+      userDatabase: UserDatabase
+  ) {
     // subscribing a user means to send them an email and insert them into the database
     // for comprehension seems to be useful here
     def subscribeUser(user: User): Task[Unit] =
@@ -21,13 +24,18 @@ object ServiceModel {
     def create(emailService: EmailService, userDatabase: UserDatabase) =
       new UserSubscription(emailService, userDatabase)
 
-    val live: ZLayer[EmailService with UserDatabase, Nothing, UserSubscription] =
+    val live
+        : ZLayer[EmailService with UserDatabase, Nothing, UserSubscription] =
       ZLayer.fromFunction(create _)
   }
 
   class EmailService {
     def email(user: User): Task[Unit] =
-      ZIO.succeed(println(s"You've just been subscribed to Rock the JVM. Welcome, ${user.name}!"))
+      ZIO.succeed(
+        println(
+          s"You've just been subscribed to Rock the JVM. Welcome, ${user.name}!"
+        )
+      )
   }
 
   object EmailService {
@@ -40,7 +48,9 @@ object ServiceModel {
     // insertion mean we need to fetch the connection from the pool and run a query
     def insert(user: User): Task[Unit] = for {
       conn <- connectionPool.get
-      _ <- conn.runQuery(s"insert into subscribers(name, email) values (${user.name}, ${user.email})")
+      _ <- conn.runQuery(
+        s"insert into subscribers(name, email) values (${user.name}, ${user.email})"
+      )
     } yield ()
   }
 
@@ -59,6 +69,8 @@ object ServiceModel {
   object ConnectionPool {
     def create(nConnections: Int) =
       new ConnectionPool(nConnections)
+
+    // Required for ZLayer
     def live(nConnections: Int): ZLayer[Any, Nothing, ConnectionPool] =
       ZLayer.succeed(create(nConnections))
   }
