@@ -88,7 +88,7 @@ object ZIODependencies extends ZIOAppDefault {
   // we can compose Zlayers (in contrast to ZIO api itself) so the final ZLayer will have all the dependencies and does not require any arguments
   val userSubscriptionServiceLayer
       : ZLayer[UserDatabase with EmailService, Nothing, UserSubscription] =
-    ZLayer.fromFunction(UserSubscription.create _)
+    ZLayer.fromFunction(UserSubscription.create _) // _ is not needed, only required in Scala 2
 
   // composing layers
   // vertical composition >>>
