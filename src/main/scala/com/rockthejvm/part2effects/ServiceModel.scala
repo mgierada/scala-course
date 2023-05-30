@@ -8,6 +8,8 @@ object ServiceModel {
   case class User(name: String, email: String)
 
   class UserSubscription(emailService: EmailService, userDatabase: UserDatabase) {
+    // subscribing a user means to send them an email and insert them into the database
+    // for comprehension seems to be useful here
     def subscribeUser(user: User): Task[Unit] =
       for {
         _ <- emailService.email(user)
@@ -35,6 +37,7 @@ object ServiceModel {
   }
 
   class UserDatabase(connectionPool: ConnectionPool) {
+    // insertion mean we need to fetch the connection from the pool and run a query
     def insert(user: User): Task[Unit] = for {
       conn <- connectionPool.get
       _ <- conn.runQuery(s"insert into subscribers(name, email) values (${user.name}, ${user.email})")
