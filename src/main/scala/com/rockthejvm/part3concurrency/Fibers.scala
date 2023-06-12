@@ -67,11 +67,14 @@ object Fibers extends ZIOAppDefault {
   } yield message
 
 
+  // Joining a fiber is an effect
+
   /**
    * Exercises
    */
   // 1 - zip two fibers without using the zip combinator
-  // hint: create a fiber that waits for both
+  // joins are effects so they are not yet running. They will be running when the method is evaluated
+  // hint: create a fiber that waits for both - can be do by using join method
   def zipFibers[E,A,B](fiber1: Fiber[E,A], fiber2: Fiber[E,B]): ZIO[Any, Nothing, Fiber[E,(A, B)]] = {
     val finalEffect = for {
       v1 <- fiber1.join

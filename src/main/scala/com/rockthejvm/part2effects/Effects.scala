@@ -1,5 +1,6 @@
 package com.rockthejvm.part2effects
 
+import play.api.libs.json._
 import scala.concurrent.Future
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -116,10 +117,13 @@ object Effects {
       )
   }
 
+
+
   def main(args: Array[String]): Unit = {
     println("Effects")
-    anIOWithSIdeEffects.unsafeRun()
-    println(measure(MyIO(() => 42)).unsafeRun())
-    printReadPrint.unsafeRun()
+    // anIOWithSIdeEffects.unsafeRun()
+    // println(measure(MyIO(() => 42)).unsafeRun())
+    // printReadPrint.unsafeRun()
+    println(transform)
   }
 }
