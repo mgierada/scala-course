@@ -99,7 +99,7 @@ object Fibers extends ZIOAppDefault {
     finalEffect.fork
   }
 
-  // 2 - same thing with orElse
+  // 2 - same thing with orElse - orElse cannot be used on fibers but can be on ZIOs
   def chainFibers[E,A](fiber1: Fiber[E,A], fiber2: Fiber[E,A]): ZIO[Any, Nothing, Fiber[E, A]] =
     fiber1.join.orElse(fiber2.join).fork
 
@@ -139,7 +139,7 @@ object Fibers extends ZIOAppDefault {
       .map(countWords) // list of effects
       .map(_.fork) // list of effects returning fibers
       .map((fiberEff: ZIO[Any, Nothing, Fiber[Nothing, Int]]) => fiberEff.flatMap(_.join)) // list of effects returning values (count of words)
-
+  // reduce will just combine all ZIOs to one ZIO
     effects.reduce { (zioa, ziob) =>
       for {
         a <- zioa

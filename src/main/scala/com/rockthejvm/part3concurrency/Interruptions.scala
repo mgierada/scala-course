@@ -12,7 +12,7 @@ object Interruptions extends ZIOAppDefault {
       ZIO.succeed(42).debugThread
     )
       .onInterrupt(ZIO.succeed("I was interrupted!").debugThread)
-      // onInterrupt, onDone
+      // onInterrupt, onDone gracefull shutdown
 
   val interruption = for {
     fib <- zioWithTime.fork
@@ -50,7 +50,10 @@ object Interruptions extends ZIOAppDefault {
   val slowEffect = (ZIO.sleep(2.seconds) *> ZIO.succeed("slow").debugThread).onInterrupt(ZIO.succeed("[slow] interrupted").debugThread)
   val fastEffect = (ZIO.sleep(1.second) *> ZIO.succeed("fast").debugThread).onInterrupt(ZIO.succeed("[fast] interrupted").debugThread)
   val aRace = slowEffect.race(fastEffect)
+  // could be also the other way around
+  // val aRace = fastEffect.race(slowEffect)
   val testRace = aRace.fork *> ZIO.sleep(3.seconds)
+  // *> operator is useful for chaining effects, but ignoring the result of the first effect
 
   /**
    * Exercise
